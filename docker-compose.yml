@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: questforge-db
+    restart: always
+    environment:
+      POSTGRES_USER: questforge
+      POSTGRES_PASSWORD: forgepass
+      POSTGRES_DB: questforge_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: questforge-backend
+    restart: always
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./backend/.env
+    environment:
+      - DATABASE_URL=postgresql://questforge:forgepass@db:5432/questforge_db?schema=public
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

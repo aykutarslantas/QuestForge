@@ -1,0 +1,78 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  games        Game[]
+
+  @@map("users")
+}
+
+enum GameStatus {
+  active
+  won
+  lost
+}
+
+model Game {
+  id             String          @id @default(uuid())
+  userId         String          @map("user_id")
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status         GameStatus      @default(active)
+  hp             Int             @default(20)
+  maxHp          Int             @default(20) @map("max_hp")
+  location       String          @default("cavern")
+  enemyHp        Int             @default(15) @map("enemy_hp")
+  treasuryLocked Boolean         @default(true) @map("treasury_locked")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  inventoryItems InventoryItem[]
+  roomItems      RoomItem[]
+  turns          Turn[]
+
+  @@map("games")
+}
+
+model InventoryItem {
+  id       String @id @default(uuid())
+  gameId   String @map("game_id")
+  game     Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  item     String
+  quantity Int    @default(1)
+
+  @@unique([gameId, item])
+  @@map("inventory_items")
+}
+
+model RoomItem {
+  id       String @id @default(uuid())
+  gameId   String @map("game_id")
+  game     Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  room     String
+  item     String
+  quantity Int    @default(1)
+
+  @@unique([gameId, room, item])
+  @@map("room_items")
+}
+
+model Turn {
+  id        String   @id @default(uuid())
+  gameId    String   @map("game_id")
+  game     Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  role      String   // "player" or "gm"
+  content   String
+  toolCalls Json?    @map("tool_calls") // raw tool calls requested by the AI
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("turns")
+}
