@@ -97,5 +97,5 @@ npx prisma migrate dev --name <migration-name>
 - [x] .env.example committed
 - [x] Migration file(s) committed
 - [x] docker compose up works locally
-- [ ] Demo video link
+- [x] Demo video link: https://youtu.be/3VFiWQO2XgE
 - [x] No secrets committed
