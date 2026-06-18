@@ -73,30 +73,25 @@ npx prisma migrate dev --name <migration-name>
 
 ---
 
-## Deployment & Tunneling Instructions
+## Deployment & Production Configurations
 
-### Frontend Deployment
-The frontend is built to be deployed on Vercel. Set `NEXT_PUBLIC_API_URL` to your backend's public endpoint.
+### Frontend Deployment (Vercel)
+- Live Frontend URL: [https://quest-forge-eight.vercel.app](https://quest-forge-eight.vercel.app)
+- Subdomain Mapping (Optional): [https://questforge.sohello.ai](https://questforge.sohello.ai)
 
-### Backend Tunnel (Local Backend + Vercel Frontend)
-If running the backend locally on port `4000`, expose it via a secure tunnel so the live Vercel frontend can make SSE calls:
-```bash
-# Using ngrok
-ngrok http 4000
-# Or using localtunnel
-npx localtunnel --port 4000
-```
-Update the Vercel frontend environment variable `NEXT_PUBLIC_API_URL` to point to the generated tunnel URL.
+### Backend Deployment (Production Server)
+- Live API URL: [https://questforge-api.sohello.ai](https://questforge-api.sohello.ai)
+- Deployed inside Docker on the production server, reverse-proxied with Nginx and secured via Let's Encrypt SSL.
 
 ---
 
 ## Submission Checklist
 
 - [x] Repo link
-- [ ] Live Vercel URL
-- [x] Backend location (local + tunnel / docker)
+- [x] Live Vercel URL
+- [x] Backend location (Production API: https://questforge-api.sohello.ai)
 - [x] Test account or registration instructions (Create an account on the Register page)
-- [x] AI provider used: Gemini / OpenAI
+- [x] AI provider used: Gemini / OpenAI (OpenAI API on production server)
 - [x] List of tools exposed to the AI documented
 - [x] How the backend validates tool calls / enforces win-lose documented
 - [x] .env.example committed
