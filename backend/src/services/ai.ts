@@ -132,6 +132,24 @@ export class AIService {
           messages.push({ role: 'user', content: turn.content });
         }
       } else if (turn.role === 'gm') {
+        // If this turn had tool calls, we MUST reconstruct them to prevent the LLM from learning to hallucinate
+        if (turn.toolCalls && Array.isArray(turn.toolCalls) && turn.toolCalls.length > 0) {
+          const tcs = turn.toolCalls as OpenAI.Chat.Completions.ChatCompletionMessageToolCall[];
+          
+          // Push the assistant message with tool_calls
+          messages.push({ role: 'assistant', content: '', tool_calls: tcs });
+          
+          // Push mock tool responses for each call so the API doesn't complain
+          for (const tc of tcs) {
+            messages.push({ 
+              role: 'tool', 
+              tool_call_id: tc.id, 
+              content: JSON.stringify({ success: true, note: "reconstructed from history" }) 
+            });
+          }
+        }
+        
+        // Push the final narration
         if (turn.content && turn.content.trim() !== '') {
           messages.push({ role: 'assistant', content: turn.content });
         }
@@ -190,8 +208,11 @@ export class AIService {
       });
     }
 
-    // Add current player action
-    cleanedMessages.push({ role: 'user', content: playerAction });
+    // Add current player action with a very strong system reminder appended to it
+    cleanedMessages.push({ 
+      role: 'user', 
+      content: `${playerAction}\n\n[SYSTEM REMINDER: You MUST call a tool (like attack_enemy) for this action if it changes state. DO NOT guess or calculate outcomes based on past narrations. Rely ONLY on the [CURRENT AUTHORITATIVE SERVER STATE] block above.]` 
+    });
 
     // 2. Tool validation loop
     let loopCount = 0;
