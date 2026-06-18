@@ -134,17 +134,25 @@ export class AIService {
       } else if (turn.role === 'gm') {
         // If this turn had tool calls, we MUST reconstruct them to prevent the LLM from learning to hallucinate
         if (turn.toolCalls && Array.isArray(turn.toolCalls) && turn.toolCalls.length > 0) {
-          const tcs = turn.toolCalls as OpenAI.Chat.Completions.ChatCompletionMessageToolCall[];
+          const tcs: OpenAI.Chat.Completions.ChatCompletionMessageToolCall[] = turn.toolCalls.map((tc: any, index: number) => ({
+            id: `call_recon_${turn.id}_${index}`,
+            type: 'function',
+            function: {
+              name: tc.name || tc.function?.name || 'unknown',
+              arguments: typeof tc.args === 'string' ? tc.args : JSON.stringify(tc.args || tc.function?.arguments || {}),
+            }
+          }));
           
           // Push the assistant message with tool_calls
           messages.push({ role: 'assistant', content: '', tool_calls: tcs });
           
-          // Push mock tool responses for each call so the API doesn't complain
-          for (const tc of tcs) {
+          // Push tool responses using the actual saved result from the DB
+          for (let i = 0; i < tcs.length; i++) {
+            const originalTc = turn.toolCalls[i];
             messages.push({ 
               role: 'tool', 
-              tool_call_id: tc.id, 
-              content: JSON.stringify({ success: true, note: "reconstructed from history" }) 
+              tool_call_id: tcs[i].id, 
+              content: JSON.stringify(originalTc.result || { success: true, note: "reconstructed" }) 
             });
           }
         }
