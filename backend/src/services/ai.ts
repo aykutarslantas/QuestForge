@@ -23,15 +23,17 @@ The player will tell you their actions, and you must narrate what happens.
 HOWEVER, you are NOT allowed to decide the outcomes of actions yourself.
 You MUST propose tool calls to check if actions are allowed and update the game state.
 
+CRITICAL RULE: You MUST call the appropriate tool (e.g. attack_enemy, move_player, take_item, use_item) for every player action. Never decide that an action succeeds, fails, or has no effect without calling the corresponding tool, even if you believe the target (like the goblin) is already defeated or the player lacks the item. The backend server is the only referee.
+
 Available rooms:
 1. cavern (The Whispering Cavern) - Starting room. Exits: north to 'armoury'. Contains 'rusty key'.
-2. armoury (The Abandoned Armoury) - Exits: south to 'cavern', east to 'treasury'. Contains 'wooden shield', 'health potion'. Guarded by a Goblin (15 HP).
+2. armoury (The Abandoned Armoury) - Exits: south to 'cavern', east to 'treasury'. Contains 'wooden shield', 'health potion'. Guarded by a Goblin (25 HP).
 3. treasury (The Treasury) - Exits: west to 'armoury'. Contains 'golden crown' (the victory item). The door is locked.
 
 Rules & Mechanics:
 - Moving: To move to a new room, you must call move_player(direction). The goblin blocks movement east to treasury if it is alive (enemyHp > 0). The treasury door is locked and requires a rusty key.
 - Items: To pick up an item, call take_item(item). Available items: 'rusty key', 'wooden shield', 'health potion', 'golden crown'. The player wins when they successfully pick up the 'golden crown'.
-- Combat: To attack the goblin in the armoury, call attack_enemy(). Combat damages both the goblin and the player. Having the 'wooden shield' reduces damage taken by 1.
+- Combat: To attack the goblin in the armoury, call attack_enemy(). Combat damages both the goblin and the player. Having the 'wooden shield' reduces damage taken by 3.
 - Using Items: To heal, call use_item("health potion"). To unlock the treasury door, call use_item("rusty key") while in the armoury.
 
 Narration guidelines:
@@ -159,6 +161,29 @@ export class AIService {
       cleanedMessages.splice(firstNonSystemIndex, 0, {
         role: 'user',
         content: 'Start the game.',
+      });
+    }
+
+    // Fetch the most up-to-date server state to keep the LLM completely synchronized
+    const currentStatus = await prisma.game.findUnique({
+      where: { id: gameId },
+      include: {
+        inventoryItems: { where: { quantity: { gt: 0 } } },
+        roomItems: { where: { quantity: { gt: 0 } } }
+      }
+    });
+
+    if (currentStatus) {
+      cleanedMessages.push({
+        role: 'system',
+        content: `[CURRENT AUTHORITATIVE SERVER STATE]
+- Player HP: ${currentStatus.hp}/${currentStatus.maxHp}
+- Player Location: ${currentStatus.location}
+- Goblin HP: ${currentStatus.enemyHp}
+- Treasury Locked: ${currentStatus.treasuryLocked ? 'Yes' : 'No'}
+- Inventory: ${currentStatus.inventoryItems.map(i => i.item).join(', ') || 'empty'}
+- Available Items in current room: ${currentStatus.roomItems.filter(ri => ri.room === currentStatus.location).map(i => i.item).join(', ') || 'none'}
+- Game Status: ${currentStatus.status}`
       });
     }
 

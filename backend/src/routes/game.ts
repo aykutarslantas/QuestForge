@@ -10,7 +10,11 @@ router.get('/status', authMiddleware, async (req: AuthenticatedRequest, res: Res
   const userId = req.user!.id;
   try {
     const game = await GameEngine.getActiveGame(userId);
-    return res.json({ game });
+    if (!game) {
+      return res.json({ game: null, roomInfo: null });
+    }
+    const roomInfo = GameEngine.getRoomInfo(game.location, game.enemyHp, game.enemyMaxHp, game.treasuryLocked);
+    return res.json({ game, roomInfo });
   } catch (error: any) {
     console.error('Error fetching game status:', error);
     return res.status(500).json({ error: 'Failed to retrieve game status.' });
@@ -22,7 +26,8 @@ router.post('/new', authMiddleware, async (req: AuthenticatedRequest, res: Respo
   const userId = req.user!.id;
   try {
     const game = await GameEngine.createGame(userId);
-    return res.status(201).json({ game });
+    const roomInfo = GameEngine.getRoomInfo(game.location, game.enemyHp, game.enemyMaxHp, game.treasuryLocked);
+    return res.status(201).json({ game, roomInfo });
   } catch (error: any) {
     console.error('Error starting new game:', error);
     return res.status(500).json({ error: 'Failed to start a new game.' });

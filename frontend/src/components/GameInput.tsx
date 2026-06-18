@@ -28,13 +28,26 @@ interface GameState {
   roomItems: RoomItem[];
 }
 
+interface EnemyInfo {
+  name: string;
+  hp: number;
+  maxHp: number;
+}
+
+interface RoomInfo {
+  name: string;
+  exits: string[];
+  enemy: EnemyInfo | null;
+}
+
 interface GameInputProps {
   game: GameState | null;
+  roomInfo: RoomInfo | null;
   onSubmitAction: (actionText: string) => void;
   isActionLoading: boolean;
 }
 
-export default function GameInput({ game, onSubmitAction, isActionLoading }: GameInputProps) {
+export default function GameInput({ game, roomInfo, onSubmitAction, isActionLoading }: GameInputProps) {
   const [inputText, setInputText] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -51,50 +64,35 @@ export default function GameInput({ game, onSubmitAction, isActionLoading }: Gam
 
   // Generate dynamic suggestions based on state
   const getSuggestions = () => {
-    if (!game || game.status !== 'active') return [];
+    if (!game || !roomInfo || game.status !== 'active') return [];
 
     const list: string[] = [];
-    const location = game.location;
-    const itemsInRoom = game.roomItems.filter((ri) => ri.room === location && ri.quantity > 0).map((ri) => ri.item);
-    const hasKey = game.inventoryItems.some((inv) => inv.item === 'rusty key');
-    const hasPotion = game.inventoryItems.some((inv) => inv.item === 'health potion');
 
-    // Room-specific moves
-    if (location === 'cavern') {
-      if (itemsInRoom.includes('rusty key')) {
-        list.push('take rusty key');
-      }
-      list.push('go north');
-    } else if (location === 'armoury') {
-      if (itemsInRoom.includes('wooden shield')) {
-        list.push('take wooden shield');
-      }
-      if (itemsInRoom.includes('health potion')) {
-        list.push('take health potion');
-      }
-      if (game.enemyHp > 0) {
-        list.push('attack goblin');
-      } else {
-        if (game.treasuryLocked) {
-          if (hasKey) {
-            list.push('use rusty key');
-          }
-        } else {
-          list.push('go east');
-        }
-      }
-      list.push('go south');
-    } else if (location === 'treasury') {
-      if (itemsInRoom.includes('golden crown')) {
-        list.push('take golden crown');
-      }
-      list.push('go west');
+    // Move actions based on exits
+    if (roomInfo.exits) {
+      roomInfo.exits.forEach((exit) => {
+        list.push(`go ${exit}`);
+      });
     }
 
-    // Generic usability items
-    if (hasPotion && game.hp < game.maxHp) {
-      list.push('use health potion');
+    // Take actions based on room items
+    const itemsInRoom = game.roomItems.filter((ri) => ri.room === game.location && ri.quantity > 0);
+    itemsInRoom.forEach((ri) => {
+      list.push(`take ${ri.item}`);
+    });
+
+    // Attack actions if enemy is present
+    if (roomInfo.enemy && roomInfo.enemy.hp > 0) {
+      const enemyShortName = roomInfo.enemy.name.split(' ')[0].toLowerCase();
+      list.push(`attack ${enemyShortName}`);
     }
+
+    // Use actions for inventory items
+    game.inventoryItems.forEach((inv) => {
+      if (inv.item !== 'golden crown') {
+        list.push(`use ${inv.item}`);
+      }
+    });
 
     return list;
   };

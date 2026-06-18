@@ -23,24 +23,38 @@ interface GameState {
   maxHp: number;
   location: string;
   enemyHp: number;
+  enemyMaxHp: number;
   treasuryLocked: boolean;
   inventoryItems: InventoryItem[];
   roomItems: RoomItem[];
 }
 
+interface EnemyInfo {
+  name: string;
+  hp: number;
+  maxHp: number;
+}
+
+interface LockInfo {
+  name: string;
+  isLocked: boolean;
+}
+
+interface RoomInfo {
+  name: string;
+  exits: string[];
+  enemy: EnemyInfo | null;
+  lock: LockInfo | null;
+}
+
 interface StatsPanelProps {
   game: GameState | null;
+  roomInfo: RoomInfo | null;
   onUseItem: (itemName: string) => void;
   isActionLoading: boolean;
 }
 
-const ROOM_NAMES: { [key: string]: string } = {
-  cavern: 'The Whispering Cavern',
-  armoury: 'The Abandoned Armoury',
-  treasury: 'The Treasury',
-};
-
-export default function StatsPanel({ game, onUseItem, isActionLoading }: StatsPanelProps) {
+export default function StatsPanel({ game, roomInfo, onUseItem, isActionLoading }: StatsPanelProps) {
   if (!game) {
     return (
       <div className="glass-panel" style={{ padding: '24px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
@@ -58,7 +72,7 @@ export default function StatsPanel({ game, onUseItem, isActionLoading }: StatsPa
     return 'var(--color-accent)';
   };
 
-  const getRoomName = (id: string) => ROOM_NAMES[id] || id;
+  const roomName = roomInfo?.name || game.location;
 
   // Render nice items list with icons
   const getItemIcon = (name: string) => {
@@ -128,12 +142,12 @@ export default function StatsPanel({ game, onUseItem, isActionLoading }: StatsPa
           <MapPin size={14} /> Current Location
         </span>
         <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'white' }}>
-          {getRoomName(game.location)}
+          {roomName}
         </div>
-        {game.location === 'armoury' && (
-          <div style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px', color: game.treasuryLocked ? 'var(--color-warning)' : '#4ade80' }}>
-            {game.treasuryLocked ? <Lock size={14} /> : <Unlock size={14} />}
-            Treasury Door is {game.treasuryLocked ? 'Locked' : 'Unlocked'}
+        {roomInfo?.lock && (
+          <div style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px', color: roomInfo.lock.isLocked ? 'var(--color-warning)' : '#4ade80' }}>
+            {roomInfo.lock.isLocked ? <Lock size={14} /> : <Unlock size={14} />}
+            {roomInfo.lock.name} is {roomInfo.lock.isLocked ? 'Locked' : 'Unlocked'}
           </div>
         )}
       </div>
@@ -166,7 +180,7 @@ export default function StatsPanel({ game, onUseItem, isActionLoading }: StatsPa
                     {inv.item} {inv.quantity > 1 ? `(x${inv.quantity})` : ''}
                   </span>
                 </div>
-                {(inv.item === 'health potion' || inv.item === 'rusty key') && (
+                {inv.item !== 'golden crown' && (
                   <button 
                     disabled={isActionLoading || game.status !== 'active'}
                     onClick={() => onUseItem(inv.item)}
@@ -218,7 +232,7 @@ export default function StatsPanel({ game, onUseItem, isActionLoading }: StatsPa
       </div>
 
       {/* Enemy Alert Panel */}
-      {game.location === 'armoury' && game.enemyHp > 0 && (
+      {roomInfo?.enemy && roomInfo.enemy.hp > 0 && (
         <div 
           className="pulse" 
           style={{ 
@@ -236,14 +250,14 @@ export default function StatsPanel({ game, onUseItem, isActionLoading }: StatsPa
             <Swords size={16} /> Enemy Engaged!
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-            <span>Goblin Guard</span>
-            <span>{game.enemyHp} / 25 HP</span>
+            <span>{roomInfo.enemy.name}</span>
+            <span>{roomInfo.enemy.hp} / {roomInfo.enemy.maxHp} HP</span>
           </div>
           <div style={{ height: '6px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '3px', overflow: 'hidden' }}>
             <div 
               style={{ 
                 height: '100%', 
-                width: `${(game.enemyHp / 25) * 100}%`, 
+                width: `${(roomInfo.enemy.hp / roomInfo.enemy.maxHp) * 100}%`, 
                 background: 'var(--color-accent)',
                 transition: 'width 0.3s ease-out' 
               }} 

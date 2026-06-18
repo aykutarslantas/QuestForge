@@ -59,15 +59,15 @@ export default function GamePage() {
         throw new Error('Failed to fetch game status');
       }
       const data = await res.json();
-      return data.game;
+      return data;
     },
     enabled: !!token,
   });
 
   // Sync database turns with local turns once status updates
   useEffect(() => {
-    if (gameData && gameData.turns) {
-      setLocalTurns(gameData.turns);
+    if (gameData && gameData.game && gameData.game.turns) {
+      setLocalTurns(gameData.game.turns);
     }
   }, [gameData]);
 
@@ -236,7 +236,7 @@ export default function GamePage() {
         </div>
 
         <div style={{ display: 'flex', gap: '12px' }}>
-          {gameData && (
+          {gameData?.game && (
             <button 
               id="btn-reset-game"
               disabled={newGameMutation.isPending}
@@ -259,7 +259,7 @@ export default function GamePage() {
       </header>
 
       {/* Main dashboard grid */}
-      {gameData ? (
+      {gameData?.game ? (
         <div className="game-grid" style={{ flexGrow: 1, paddingBottom: '20px', minHeight: 0 }}>
           {/* Narrative stream and Input */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', minHeight: 0 }}>
@@ -269,7 +269,8 @@ export default function GamePage() {
               isStreaming={isStreaming} 
             />
             <GameInput 
-              game={gameData} 
+              game={gameData?.game} 
+              roomInfo={gameData?.roomInfo} 
               onSubmitAction={handleAction} 
               isActionLoading={isStreaming} 
             />
@@ -278,7 +279,8 @@ export default function GamePage() {
           {/* Character Stats Sheet */}
           <div style={{ height: '100%', minHeight: 0 }}>
             <StatsPanel 
-              game={gameData} 
+              game={gameData?.game} 
+              roomInfo={gameData?.roomInfo} 
               onUseItem={handleUseItem} 
               isActionLoading={isStreaming} 
             />

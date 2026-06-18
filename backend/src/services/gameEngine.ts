@@ -50,6 +50,7 @@ export class GameEngine {
           maxHp: 20,
           location: 'cavern',
           enemyHp: 25,
+          enemyMaxHp: 25,
           treasuryLocked: true,
         },
       });
@@ -97,6 +98,38 @@ export class GameEngine {
       },
     });
     return game;
+  }
+
+  /**
+   * Returns metadata about the current room, exits, and active enemy.
+   */
+  static getRoomInfo(location: string, enemyHp: number, enemyMaxHp: number, treasuryLocked: boolean) {
+    const room = WORLD_MAP[location];
+    if (!room) return null;
+
+    let enemy = null;
+    if (location === 'armoury' && enemyHp > 0) {
+      enemy = {
+        name: 'Goblin Guard',
+        hp: enemyHp,
+        maxHp: enemyMaxHp,
+      };
+    }
+
+    let lock = null;
+    if (location === 'armoury') {
+      lock = {
+        name: 'Treasury Door',
+        isLocked: treasuryLocked,
+      };
+    }
+
+    return {
+      name: room.name,
+      exits: Object.keys(room.exits),
+      enemy,
+      lock,
+    };
   }
 
   /**
