@@ -363,7 +363,7 @@ export class GameEngine {
 
         if (newPlayerHp <= 0) {
           statusUpdate = GameStatus.lost;
-          outcomeMessage = `You swing at the goblin dealing ${playerDamage} damage. The goblin (HP: ${newEnemyHp}) counterattacks, dealing ${enemyDamage} damage (reduced by shield) and landing a fatal blow. You have been defeated. Game Over.`;
+          outcomeMessage = `You swing at the goblin dealing ${playerDamage} damage. The goblin (HP: ${newEnemyHp}) counterattacks, dealing ${enemyDamage} damage${hasShield ? ' (reduced by shield)' : ''} and landing a fatal blow. You have been defeated. Game Over.`;
         } else {
           outcomeMessage = `You attack the goblin and deal ${playerDamage} damage. The goblin (HP: ${newEnemyHp}) counterattacks, dealing ${enemyDamage} damage${hasShield ? ' (reduced by shield)' : ''}. Your HP is now ${newPlayerHp}/${game.maxHp}.`;
         }
