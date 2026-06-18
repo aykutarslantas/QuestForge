@@ -49,7 +49,7 @@ export class GameEngine {
           hp: 20,
           maxHp: 20,
           location: 'cavern',
-          enemyHp: 15,
+          enemyHp: 25,
           treasuryLocked: true,
         },
       });
@@ -344,8 +344,8 @@ export class GameEngine {
         return { success: false, message: 'The goblin guard has already been defeated.' };
       }
 
-      // Calculate player damage: 4-6
-      const playerDamage = Math.floor(Math.random() * 3) + 4;
+      // Calculate player damage: 3-5
+      const playerDamage = Math.floor(Math.random() * 3) + 3;
       const newEnemyHp = Math.max(0, game.enemyHp - playerDamage);
 
       let enemyDamage = 0;
@@ -354,11 +354,11 @@ export class GameEngine {
       let outcomeMessage = '';
 
       if (newEnemyHp > 0) {
-        // Goblin retaliates: 2-4 damage
-        const baseEnemyDamage = Math.floor(Math.random() * 3) + 2;
+        // Goblin retaliates: 4-7 damage
+        const baseEnemyDamage = Math.floor(Math.random() * 4) + 4;
         const hasShield = game.inventoryItems.some((inv) => inv.item === 'wooden shield' && inv.quantity > 0);
         
-        enemyDamage = hasShield ? Math.max(1, baseEnemyDamage - 1) : baseEnemyDamage;
+        enemyDamage = hasShield ? Math.max(1, baseEnemyDamage - 3) : baseEnemyDamage;
         newPlayerHp = Math.max(0, game.hp - enemyDamage);
 
         if (newPlayerHp <= 0) {

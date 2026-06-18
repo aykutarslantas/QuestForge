@@ -56,7 +56,7 @@ async function runTests() {
 
   // 7. Engage in combat
   console.log('\nTesting Combat & Retaliation Rules:');
-  let activeEnemyHp = 15;
+  let activeEnemyHp = 25;
   let turn = 1;
   while (activeEnemyHp > 0) {
     const attackResult = await GameEngine.attackEnemy(game.id);
