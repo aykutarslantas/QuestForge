@@ -237,13 +237,13 @@ export default function StatsPanel({ game, onUseItem, isActionLoading }: StatsPa
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
             <span>Goblin Guard</span>
-            <span>{game.enemyHp} / 15 HP</span>
+            <span>{game.enemyHp} / 25 HP</span>
           </div>
           <div style={{ height: '6px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '3px', overflow: 'hidden' }}>
             <div 
               style={{ 
                 height: '100%', 
-                width: `${(game.enemyHp / 15) * 100}%`, 
+                width: `${(game.enemyHp / 25) * 100}%`, 
                 background: 'var(--color-accent)',
                 transition: 'width 0.3s ease-out' 
               }} 
